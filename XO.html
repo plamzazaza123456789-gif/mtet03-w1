@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyberpunk XO Game (Keypad Edition) 🚀</title>
+    
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css" />
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+    
+    <style>
+        body {
+            background-color: #0d0e15;
+            color: #fff;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        h1 {
+            color: #00f0ff;
+            text-shadow: 0 0 10px #00f0ff, 0 0 20px #00f0ff;
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+        }
+
+        #status {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            color: #ff007f;
+            text-shadow: 0 0 8px #ff007f;
+            font-weight: bold;
+        }
+
+        /* คำแนะนำปุ่มกด */
+        .instruction {
+            color: #6c7a9c;
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+            text-shadow: 0 0 5px rgba(108, 122, 156, 0.3);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.15), inset 0 0 15px rgba(255, 0, 127, 0.1);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+        }
+
+        .cell {
+            width: 90px;
+            height: 90px;
+            background: #161925;
+            border: 2px solid #2a2e45;
+            border-radius: 15px;
+            font-size: 2.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* แสดงตัวเลขจางๆ ไว้นึกตำแหน่ง Keypad */
+        .cell::after {
+            content: attr(data-key);
+            position: absolute;
+            bottom: 5px;
+            right: 8px;
+            font-size: 0.75rem;
+            color: #3d4566;
+        }
+
+        .cell:hover {
+            border-color: #00f0ff;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+            background: #1e2235;
+        }
+
+        .x-player {
+            color: #ff007f !important;
+            text-shadow: 0 0 10px #ff007f, 0 0 20px #ff007f;
+        }
+
+        .o-player {
+            color: #00f0ff !important;
+            text-shadow: 0 0 10px #00f0ff, 0 0 20px #00f0ff;
+        }
+
+        #reset-btn {
+            margin-top: 30px;
+            padding: 12px 35px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #fff;
+            background: transparent;
+            border: 2px solid #ff007f;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 0, 127, 0.3);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #reset-btn:hover {
+            background: #ff007f;
+            box-shadow: 0 0 20px #ff007f;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body py-keydown="handle_keypress">
+
+    <h1>CYBER XO</h1>
+    <div id="status">ตาของฝั่ง: X (เริ่มลุย!)</div>
+    <div class="instruction">💡 ทริค: สามารถกดปุ่มเลข 1-9 บน Numpad เพื่อเล่นได้เท่ๆ!</div>
+
+    <div class="board">
+        <div class="cell" id="cell-0" data-key="7" py-click="cell_click"></div>
+        <div class="cell" id="cell-1" data-key="8" py-click="cell_click"></div>
+        <div class="cell" id="cell-2" data-key="9" py-click="cell_click"></div>
+        <div class="cell" id="cell-3" data-key="4" py-click="cell_click"></div>
+        <div class="cell" id="cell-4" data-key="5" py-click="cell_click"></div>
+        <div class="cell" id="cell-5" data-key="6" py-click="cell_click"></div>
+        <div class="cell" id="cell-6" data-key="1" py-click="cell_click"></div>
+        <div class="cell" id="cell-7" data-key="2" py-click="cell_click"></div>
+        <div class="cell" id="cell-8" data-key="3" py-click="cell_click"></div>
+    </div>
+
+    <button id="reset-btn" py-click="reset_game">RESTART</button>
+
+    <script type="py">
+        from pyscript import document
+
+        board = [""] * 9
+        current_player = "X"
+        game_active = True
+
+        win_combinations = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], 
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], 
+            [0, 4, 8], [2, 4, 6]             
+        ]
+
+        # 🗺️ Python Dictionary สำหรับแมปปุ่ม Keypad เข้ากับลำดับ Index ของตาราง XO
+        key_map = {
+            "7": 0, "8": 1, "9": 2,
+            "4": 3, "5": 4, "6": 5,
+            "1": 6, "2": 7, "3": 8
+        }
+
+        # ฟังก์ชันหลักในการเดินเกม (รวมศูนย์ไว้ที่นี่)
+        def make_move(cell_id):
+            global current_player, game_active
+            
+            if not game_active or board[cell_id] != "":
+                return
+                
+            board[cell_id] = current_player
+            cell = document.getElementById(f"cell-{cell_id}")
+            cell.innerText = current_player
+            
+            if current_player == "X":
+                cell.classList.add("x-player")
+            else:
+                cell.classList.add("o-player")
+                
+            if check_winner():
+                document.getElementById("status").innerText = f"🏆 {current_player} ชนะ! โคตรตึง!"
+                document.getElementById("status").style.color = "#00f0ff" if current_player == "O" else "#ff007f"
+                game_active = False
+                return
+                
+            if "" not in board:
+                document.getElementById("status").innerText = "🤝 เสมอว่ะ! ฝีมือพอกัน"
+                document.getElementById("status").style.color = "#ffffff"
+                game_active = False
+                return
+                
+            current_player = "O" if current_player == "X" else "X"
+            document.getElementById("status").innerText = f"ตาของฝั่ง: {current_player}"
+            document.getElementById("status").style.color = "#00f0ff" if current_player == "O" else "#ff007f"
+
+        # ฟังก์ชันเมื่อผู้ใช้ "คลิกเมาส์"
+        def cell_click(event):
+            cell = event.target
+            cell_id = int(cell.id.replace("cell-", ""))
+            make_move(cell_id)
+
+        # ⌨️ ฟังก์ชันเมื่อผู้ใช้ "กดปุ่มคีย์บอร์ด"
+        def handle_keypress(event):
+            pressed_key = event.key  # ดึงค่าปุ่มที่ถูกกด เช่น "7", "5"
+            
+            # ถ้าปุ่มที่กดตรงกับที่เราตั้งค่าไว้ในดีไซน์ Keypad
+            if pressed_key in key_map:
+                target_index = key_map[pressed_key]
+                make_move(target_index)
+
+        def check_winner():
+            for combo in win_combinations:
+                if board[combo[0]] == board[combo[1]] == board[combo[2]] != "":
+                    return True
+            return False
+
+        def reset_game(event):
+            global board, current_player, game_active
+            board = [""] * 9
+            current_player = "X"
+            game_active = True
+            
+            status_text = document.getElementById("status")
+            status_text.innerText = "ตาของฝั่ง: X (เริ่มลุย!)"
+            status_text.style.color = "#ff007f"
+            
+            for i in range(9):
+                cell = document.getElementById(f"cell-{i}")
+                cell.innerText = ""
+                cell.classList.remove("x-player", "o-player")
+    </script>
+
+</body>
+</html>

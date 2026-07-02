@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pink Python Calculator 🌸</title>
+    
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css" />
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+    
+    <style>
+        body {
+            background-color: #FFF0F5; /* สีพื้นหลังชมพูพาสเทล */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .calculator {
+            background-color: #FFFFFF;
+            padding: 25px;
+            border-radius: 25px;
+            box-shadow: 0px 10px 30px rgba(255, 105, 180, 0.3);
+            border: 2px solid #FFB6C1;
+            width: 320px;
+        }
+        .title {
+            color: #D2366A;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        #display {
+            width: 100%;
+            height: 65px;
+            background-color: #FFF;
+            border: 2px solid #FFB6C1;
+            border-radius: 15px;
+            font-size: 32px;
+            text-align: right;
+            padding: 10px 15px;
+            box-sizing: border-box;
+            color: #D2366A;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+        button {
+            height: 60px;
+            border-radius: 15px;
+            border: none;
+            background-color: #FF69B4; /* ปุ่มสีชมพูสดใส */
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        button:hover {
+            background-color: #FF1493; /* ชมพูเข้มขึ้นตอนเมาส์ชี้ */
+            transform: scale(1.05);
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        .clear { background-color: #FFB6C1; color: #D2366A; }
+        .operator { background-color: #FF85A2; }
+        .equal {
+            grid-column: span 4;
+            background-color: #D2366A;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator">
+        <div class="title">🌸 Python Calculator 🌸</div>
+        <input type="text" id="display" readonly placeholder="0">
+        
+        <div class="buttons">
+            <button class="clear" py-click="clear_display">C</button>
+            <button class="operator" py-click="append_value">/</button>
+            <button class="operator" py-click="append_value">*</button>
+            <button class="operator" py-click="append_value">-</button>
+            
+            <button py-click="append_value">7</button>
+            <button py-click="append_value">8</button>
+            <button py-click="append_value">9</button>
+            <button class="operator" py-click="append_value">+</button>
+            
+            <button py-click="append_value">4</button>
+            <button py-click="append_value">5</button>
+            <button py-click="append_value">6</button>
+            <button py-click="append_value">.</button>
+            
+            <button py-click="append_value">1</button>
+            <button py-click="append_value">2</button>
+            <button py-click="append_value">3</button>
+            <button py-click="append_value">0</button>
+            
+            <button class="equal" py-click="calculate">=</button>
+        </div>
+    </div>
+
+    <script type="py">
+        from pyscript import document
+
+        expression = ""
+
+        # ฟังก์ชัน Python สำหรับรับค่าจากปุ่มที่กด
+        def append_value(event):
+            global expression
+            display = document.getElementById("display")
+            
+            # ดึงตัวอักษรบนหน้าปุ่มที่ผู้ใช้กด (เช่น เลข 7 หรือเครื่องหมาย +)
+            char = event.target.innerText
+            
+            if display.value == "Error":
+                expression = ""
+                
+            expression += str(char)
+            display.value = expression
+
+        # ฟังก์ชัน Python สำหรับเคลียร์หน้าจอ (ปุ่ม C)
+        def clear_display(event):
+            global expression
+            expression = ""
+            document.getElementById("display").value = ""
+
+        # ฟังก์ชัน Python สำหรับคำนวณผลลัพธ์ (ปุ่ม =)
+        def calculate(event):
+            global expression
+            display = document.getElementById("display")
+            try:
+                if expression:
+                    # ใช้ฟังก์ชัน eval() ของ Python ในการคำนวณสมการคณิตศาสตร์
+                    result = str(eval(expression))
+                    display.value = result
+                    expression = result
+            except Exception:
+                display.value = "Error"
+                expression = ""
+    </script>
+
+</body>
+</html>
